@@ -38,6 +38,19 @@ def to_str(value, upper=False):
     return text.upper() if upper else text
 
 
+def parse_mixed_datetime(series):
+    parsed = pd.to_datetime(series, dayfirst=True, errors='coerce')
+    missing_mask = parsed.isna()
+    if missing_mask.any():
+        parsed_alt = pd.to_datetime(
+            series[missing_mask],
+            format='%m-%d-%Y %I:%M %p',
+            errors='coerce'
+        )
+        parsed.loc[missing_mask] = parsed_alt
+    return parsed
+
+
 def print_table(title, columns, rows):
     str_rows = [["" if value is None else str(value) for value in row] for row in rows]
     widths = [len(str(col)) for col in columns]
@@ -147,9 +160,9 @@ def etl_process():
     df['ticket_price'] = df['ticket_price'].astype(str).str.replace(',', '.')
     df['ticket_price'] = pd.to_numeric(df['ticket_price'], errors='coerce')
 
-    # Estandarizar Fechas
+    # Estandarizar Fechas (dataset mixto: DD/MM/YYYY y MM-DD-YYYY hh:mm AM/PM)
     for col in ['departure_datetime', 'arrival_datetime']:
-        df[col] = pd.to_datetime(df[col], dayfirst=True, errors='coerce')
+        df[col] = parse_mixed_datetime(df[col])
 
     # Estandarizar Género (M, Masculino, m -> Masculino)
     df['passenger_gender'] = df['passenger_gender'].str.strip().str.upper()
@@ -197,6 +210,8 @@ def etl_process():
     vuelos_insertados = 0
     filas_omitidas = 0
     errores = []
+    omitidas_por_fecha = 0
+    omitidas_por_campos_requeridos = 0
 
     aerolinea_cache = {}
     pasajero_cache = {}
@@ -208,6 +223,7 @@ def etl_process():
             departure_ts = to_none_if_nan(row['departure_datetime'])
             if departure_ts is None:
                 filas_omitidas += 1
+                omitidas_por_fecha += 1
                 continue
 
             departure_dt = departure_ts.to_pydatetime()
@@ -222,6 +238,7 @@ def etl_process():
 
             if not all([airline_code, passenger_id, origin_code, destination_code]):
                 filas_omitidas += 1
+                omitidas_por_campos_requeridos += 1
                 continue
 
             if airline_code in aerolinea_cache:
@@ -337,6 +354,8 @@ def etl_process():
     cursor.close()
     print(f"Vuelos insertados: {vuelos_insertados}")
     print(f"Filas omitidas: {filas_omitidas}")
+    print(f"  - Omitidas por fecha de salida inválida: {omitidas_por_fecha}")
+    print(f"  - Omitidas por campos requeridos vacíos: {omitidas_por_campos_requeridos}")
     if errores:
         print("Primeros errores detectados:")
         for err in errores:
