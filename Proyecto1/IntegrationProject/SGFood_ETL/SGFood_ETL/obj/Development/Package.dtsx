@@ -1,4 +1,4 @@
-﻿<?xml version="1.0"?>
+<?xml version="1.0"?>
 <DTS:Executable xmlns:DTS="www.microsoft.com/SqlServer/Dts"
   DTS:refId="Package"
   DTS:CreationDate="4/8/2026 11:16:00 PM"
@@ -37,7 +37,7 @@
         <DTS:ConnectionManager
           DTS:ConnectRetryCount="0"
           DTS:ConnectRetryInterval="0"
-          DTS:ConnectionString="Provider=Microsoft.ACE.OLEDB.12.0;Data Source=C:\Users\Vasqu\Desktop\Semi2\SS21S2026_201800678\Proyecto1\SGFood_Proyecto1_Muestra.xlsx;Extended Properties=&quot;Excel 12.0 XML;HDR=YES&quot;;" />
+          DTS:ConnectionString="Provider=Microsoft.ACE.OLEDB.12.0;Data Source=C:\Users\Vasqu\Desktop\Semi2\SS21S2026_201800678\Proyecto1\SGFood_Proyecto1_Muestra.xlsx;Extended Properties=&quot;EXCEL 12.0 XML;HDR=YES&quot;;" />
       </DTS:ObjectData>
     </DTS:ConnectionManager>
     <DTS:ConnectionManager
@@ -53,7 +53,7 @@
           <DTS:Password
             DTS:Name="Password"
             Sensitive="1"
-            Encrypted="1">AQAAANCMnd8BFdERjHoAwE/Cl+sBAAAA/qesXVRGokGq4v7kbF7MugAAAAAIAAAARABUAFMAAAAQZgAAAAEAACAAAAB7YHNF8cVbFDdxoz518DM1JVgSUc/v4d17sQen2Ee0pgAAAAAOgAAAAAIAACAAAADteveQXt4ggVdQhY1VDTSPjbK6utINNMBuq8kUnUC54jAAAAD3rbME+NV5otS+1nh2bOK4onMssCaotPK5jr7xsZYft4Hibp3h+n7Jh7m/Mf04uDxAAAAARhCmho0wQmHThY9k5POKALvc0/pMoGFGRWBX8eiQ0z0V2F7NaiYuS9UK+4oAyJnjAD5GfFjQwv0rJEp06967hw</DTS:Password>
+            Encrypted="1">AQAAANCMnd8BFdERjHoAwE/Cl+sBAAAA/qesXVRGokGq4v7kbF7MugAAAAAIAAAARABUAFMAAAAQZgAAAAEAACAAAADPzjGposgkViBPO2/cyw/XTOCBXSNPS/RddrZj7T8NnwAAAAAOgAAAAAIAACAAAACu0J/W5cvYpcBPzauMZ9vUZjq+7ILOAZWkXayIpZWB0jAAAACG+0+Bk7OcjdV22Wa286zyC1i9FsnYXZCI6w5rcXITDKQTfXwcIfmOEtI0cvSX0vZAAAAA0hGXnndXBkGvlVhMNh83jpBY6XCjw2jtISR0BU0oGeOS6TBAfiLBq+KQHqQjDRJjiiMshviUQsHjyZkW9TyuvQ</DTS:Password>
         </DTS:ConnectionManager>
       </DTS:ObjectData>
     </DTS:ConnectionManager>

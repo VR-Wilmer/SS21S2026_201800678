@@ -1,35 +1,52 @@
--- Usar la base de datos correcta
+-- =========================================================================
+-- PROYECTO 1 - DATA WAREHOUSE SG-FOOD
+-- =========================================================================
+
+USE master;
+GO
+
+-- 1. Crear la base de datos si no existe
+IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = N'SGFoodDW')
+BEGIN
+    CREATE DATABASE SGFoodDW;
+END
+GO
+
 USE SGFoodDW;
 GO
 
--- 1. CREACIÓN DE TABLAS DE DIMENSIONES
+-- 2. Limpieza de tablas (Eliminación en cascada para evitar errores)
+IF OBJECT_ID('dbo.Fact_Ventas', 'U') IS NOT NULL 
+BEGIN
+    ALTER TABLE dbo.Fact_Ventas DROP CONSTRAINT IF EXISTS FK_FactVentas_Cliente;
+    ALTER TABLE dbo.Fact_Ventas DROP CONSTRAINT IF EXISTS FK_FactVentas_Producto;
+    ALTER TABLE dbo.Fact_Ventas DROP CONSTRAINT IF EXISTS FK_FactVentas_Tiempo;
+    DROP TABLE dbo.Fact_Ventas;
+END
 
--- Dimensión Cliente
+IF OBJECT_ID('dbo.Dim_Cliente', 'U') IS NOT NULL DROP TABLE dbo.Dim_Cliente;
+IF OBJECT_ID('dbo.Dim_Producto', 'U') IS NOT NULL DROP TABLE dbo.Dim_Producto;
+IF OBJECT_ID('dbo.Dim_Tiempo', 'U') IS NOT NULL DROP TABLE dbo.Dim_Tiempo;
+
+-- =========================================================================
+-- 3. CREACIÓN DE DIMENSIONES (Modelo Estrella)
+-- =========================================================================
+
 CREATE TABLE Dim_Cliente (
     SK_Cliente INT IDENTITY(1,1) PRIMARY KEY, 
-    IdCliente INT NOT NULL,                   
-    NombreCliente VARCHAR(100),
-    TipoCliente VARCHAR(50)
+    ClienteId VARCHAR(50) NOT NULL,                   
+    ClienteNombre VARCHAR(200),
+    SegmentoCliente VARCHAR(100)
 );
 
--- Dimensión Producto
 CREATE TABLE Dim_Producto (
     SK_Producto INT IDENTITY(1,1) PRIMARY KEY,
-    IdProducto INT NOT NULL,
-    NombreProducto VARCHAR(100),
-    CategoriaProducto VARCHAR(50),
-    MarcaProducto VARCHAR(50)
+    ProductoSKU VARCHAR(50) NOT NULL,
+    ProductoNombre VARCHAR(200),
+    Categoria VARCHAR(100),
+    Marca VARCHAR(100)
 );
 
--- Dimensión Sucursal
-CREATE TABLE Dim_Sucursal (
-    SK_Sucursal INT IDENTITY(1,1) PRIMARY KEY,
-    IdSucursal INT NOT NULL,
-    NombreSucursal VARCHAR(100),
-    RegionSucursal VARCHAR(50)
-);
-
--- Dimensión Tiempo 
 CREATE TABLE Dim_Tiempo (
     SK_Fecha INT PRIMARY KEY,                 
     Fecha DATE NOT NULL,
@@ -39,25 +56,47 @@ CREATE TABLE Dim_Tiempo (
     Dia INT
 );
 
--- 2. CREACIÓN DE LA TABLA DE HECHOS
+-- =========================================================================
+-- 4. CREACIÓN DE LA TABLA DE HECHOS
+-- =========================================================================
 
--- Tabla de Hechos Ventas
 CREATE TABLE Fact_Ventas (
     SK_Venta INT IDENTITY(1,1) PRIMARY KEY,
-    IdTransaccion INT NOT NULL,               
+    TransaccionId VARCHAR(50) NOT NULL,               
     SK_Fecha INT NOT NULL,
     SK_Cliente INT NOT NULL,
     SK_Producto INT NOT NULL,
-    SK_Sucursal INT NOT NULL,
-    MetodoPago VARCHAR(50),                   
-    Cantidad INT,
+    CantidadVendida INT,
     PrecioUnitario DECIMAL(18,2),
-    MontoTotal DECIMAL(18,2),
+    ImporteNeto DECIMAL(18,2),
     
-    -- Restricciones de llaves foráneas
     CONSTRAINT FK_FactVentas_Tiempo FOREIGN KEY (SK_Fecha) REFERENCES Dim_Tiempo(SK_Fecha),
     CONSTRAINT FK_FactVentas_Cliente FOREIGN KEY (SK_Cliente) REFERENCES Dim_Cliente(SK_Cliente),
-    CONSTRAINT FK_FactVentas_Producto FOREIGN KEY (SK_Producto) REFERENCES Dim_Producto(SK_Producto),
-    CONSTRAINT FK_FactVentas_Sucursal FOREIGN KEY (SK_Sucursal) REFERENCES Dim_Sucursal(SK_Sucursal)
+    CONSTRAINT FK_FactVentas_Producto FOREIGN KEY (SK_Producto) REFERENCES Dim_Producto(SK_Producto)
 );
+GO
+
+-- =========================================================================
+-- 5. POBLACIÓN INICIAL DE DIMENSIÓN TIEMPO (2020 - 2030)
+-- =========================================================================
+
+DECLARE @FechaInicio DATE = '2020-01-01';
+DECLARE @FechaFin DATE = '2030-12-31';
+
+WHILE @FechaInicio <= @FechaFin
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM Dim_Tiempo WHERE SK_Fecha = CONVERT(INT, CONVERT(VARCHAR(8), @FechaInicio, 112)))
+    BEGIN
+        INSERT INTO Dim_Tiempo (SK_Fecha, Fecha, Anio, Mes, NombreMes, Dia)
+        VALUES (
+            CONVERT(INT, CONVERT(VARCHAR(8), @FechaInicio, 112)), 
+            @FechaInicio,
+            YEAR(@FechaInicio),
+            MONTH(@FechaInicio),
+            DATENAME(MONTH, @FechaInicio),
+            DAY(@FechaInicio)
+        );
+    END
+    SET @FechaInicio = DATEADD(DAY, 1, @FechaInicio);
+END;
 GO
