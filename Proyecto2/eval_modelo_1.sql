@@ -1,0 +1,1 @@
+SELECT * FROM ML.EVALUATE(MODEL `proyecto-2-seminario-sistemas.taxi_data.modelo_prediccion_tarifa`)
